@@ -1,4 +1,6 @@
 ﻿using Maze.Library;
+using System.Collections.Generic;
+using System.Drawing;
 
 namespace Maze.Solver
 {
@@ -8,6 +10,9 @@ namespace Maze.Solver
     public class RobotController
     {
         private IRobot robot;
+        private bool ready = false;
+        //List of all visited Points
+        private List<Point> visited = new List<Point>();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="RobotController"/> class
@@ -31,15 +36,81 @@ namespace Maze.Solver
         /// </remarks>
         public void MoveRobotToExit()
         {
-            // Here you have to add your code
+            //Starting Coordinates
+            int x = 0;
+            int y = 0;
 
-            // Trivial sample algorithm that can just move right
-            var reachedEnd = false;
-            robot.ReachedExit += (_, __) => reachedEnd = true;
+            robot.ReachedExit += (_, __) => this.ready = true;
 
-            while (!reachedEnd)
+            this.moveOut(x, y);
+
+            if (!this.ready)
             {
-                robot.Move(Direction.Right);
+                robot.HaltAndCatchFire();
+            }
+        }
+
+        //Backtracker 
+        public void moveOut(int x, int y)
+        {
+            if(!visited.Contains(new Point(x, y)) && !ready ){
+                if(robot.TryMove(Direction.Right))
+                {
+                    
+                    visited.Add(new Point(x, y));
+                    robot.Move(Direction.Right);
+                    moveOut(x+1, y);
+                    if (!ready)
+                    {
+                        robot.Move(Direction.Left);
+                        x--;
+                    }
+                }
+            }
+            if (!visited.Contains(new Point(x, y)) && !ready)
+            {
+                if (robot.TryMove(Direction.Left) && !ready)
+                {
+                    
+                    visited.Add(new Point(x, y));
+                    robot.Move(Direction.Left);
+                    moveOut(x--, y);
+                    if (!ready)
+                    {
+                        robot.Move(Direction.Right);
+                        x++;
+                    }
+                }
+            }
+            if (!visited.Contains(new Point(x, y)) && !ready)
+            {
+                if (robot.TryMove(Direction.Up) && !ready)
+                {
+                    
+                    visited.Add(new Point(x, y));
+                    robot.Move(Direction.Up);
+                    moveOut(x, y--);
+                    if (!ready)
+                    {
+                        robot.Move(Direction.Down);
+                        y++;
+                    }
+                }
+            }
+            if (!visited.Contains(new Point(x, y)) && !ready)
+            {
+                if (robot.TryMove(Direction.Down) && !ready)
+                {
+                    visited.Add(new Point(x, y));
+                    robot.Move(Direction.Down);
+                    moveOut(x, y);
+                    if (!ready)
+                    {
+                        robot.Move(Direction.Down);
+                        y--;
+                    }
+                }
+
             }
         }
     }
